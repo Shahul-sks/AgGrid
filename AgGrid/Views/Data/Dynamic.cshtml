@@ -1,0 +1,117 @@
+﻿@model List<Product>
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css">
+
+
+    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid.min.noStyle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+</head>
+<h2>Dynamic AG Grid</h2>
+
+<button onclick="deleteData()">Delete Item </button>
+<div>
+    <a asp-action="Add">Add Product</a>
+
+</div>
+
+
+<div id="myGrid" class="ag-theme-alpine-dark"></div>
+
+
+<script>
+
+
+    const gridOptions = {
+
+        // rowData: @Html.Raw(Json.Serialize(Model)),
+
+        columnDefs: [
+
+            { field: "pId", type: ['nonEditableColumn'], width: 100, checkboxSelection: true },
+            { field: "pName" },
+            { field: "pQuantity" },
+            { field: "pCategory" },
+
+        ],
+        domLayout: 'autoHeight',
+        autoSizeColumns: true,
+        toolbar: ["edit"],
+        columnHoverHighlight: true,
+        rowSelection: 'multiple',
+        // pagination: true,
+        // paginationPageSize: 10,
+        defaultColDef: {
+            filter: true,
+            editable: true,
+        },
+        editType: 'fullRow',
+        //singleClickEdit: true,
+        onCellValueChanged: updateData,
+        onRowValueChanged: updateData,
+        columnTypes: {
+            nonEditableColumn: { editable: true },
+        }
+    };
+
+    function showData() {
+        $.ajax({
+            url: "/Data/ShowData",
+            method: "GET",
+            dataType: "json",
+            success: function (data) {
+                gridOptions.api.setRowData(data);
+            }
+        });
+    }
+    showData();
+
+
+    function updateData(params) {
+        if (params && params.data) {
+            $.ajax({
+                url: '/Data/UpdateData',
+                type: 'POST',
+                data: params.data,
+                dataType: 'json',
+                success: function (res) {
+                    if (res.success) {
+                        alert("Update data");
+                    }
+                }
+            });
+        } else {
+            console.error("Invalid or missing params object");
+        }
+    }
+
+    function deleteData() {
+
+        const selecteRow = gridOptions.api.getSelectedRows();
+        const id = selecteRow[0].pId;
+
+        $.ajax({
+            url: '/Data/DeleteData/' + id,
+            type: 'POST',
+
+            success: function (res) {
+                if (res.success) {
+                    alert("Data Deleted Successfully");
+                } else {
+                    alert("Data Not Deleted");
+                }
+            }
+        });
+    }
+
+
+
+
+    const myGridElement = document.querySelector('#myGrid');
+    new agGrid.Grid(myGridElement, gridOptions);
+ </script>
+
+
+

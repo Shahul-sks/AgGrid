@@ -1,0 +1,34 @@
+﻿<head>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+</head>
+<body>
+
+    <div id="myGrid" class="ag-theme-quartz" style="height: 500px"> </div>
+    <script>
+
+
+        let gridOptions = {
+
+            rowData: [
+                { make: "Tesla", model: "Model Y", price: 64950, quantity:5, electric: true },
+                { make: "Ford", model: "F-Series", price: 33850, quantity: 3, electric: false },
+                { make: "Google", model: "G-Series", price: 63850, quantity: 13, electric: false },
+                { make: "BMW", model: "Speed", price: 133850, quantity: 3, electric: true },
+                { make: "Toyota", model: "Corolla", price: 29600, quantity: 15, electric: false },
+            ],
+             
+            columnDefs: [
+                { field: "make" },
+                { field: "model" },
+                { field: "price" },
+                { field: "quantity" },
+                { field: "electric" }
+            ]
+        };
+        const myGridElement = document.querySelector('#myGrid');
+        agGrid.createGrid(myGridElement, gridOptions);
+
+
+
+    </script>
+</body>

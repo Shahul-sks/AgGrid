@@ -1,0 +1,178 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Product
+<head>
+    <!-- Includes all JS & CSS for AG Grid -->
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    <style>
+        .ag-theme-quartz,
+        .ag-theme-quartz-dark {
+            /* disable all borders */
+            --ag-borders: none;
+            /* then add back a border between rows */
+            --ag-row-border-style: dashed;
+            --ag-row-border-width: 2px;
+            --ag-row-border-color: rgb(150, 150, 200);
+        }
+
+        #form {
+            display: none;
+        }
+    </style>
+</head>
+
+<button type="button" id="addBtn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+    Add New Record
+</button>
+
+
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel"></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="StudentForm" method="post">
+                    <div class="form-group">
+                        <label asp-for="pName">Product Name</label>
+                        <input class="form-control" id="Name" asp-for="pName">
+                        <span asp-validation-for="pName" id="namecheck" class="error-message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="pQuantity">Quantity</label>
+                        <input class="form-control" id="quantity" asp-for="pQuantity">
+                        <span asp-validation-for="pQuantity" id="quantitycheck" class="error-message"> </span>
+                    </div>
+                    <div class="form-group">
+
+                        <label asp-for="pCategory">Category</label>
+                        <input class="form-control" id="category" asp-for="pCategory">
+                        <span asp-validation-for="pCategory" id="categorycheck" class="error-message"> </span>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="saveBtn" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<h1>AG Grid New</h1>
+
+<div id="myGrid" class="ag-theme-quartz-dark" style="height: 500px"></div>
+
+
+<script>
+    const gridOptions = {
+        // Row Data: The data to be displayed.
+        rowData: [],
+        // Column Definitions: Defines & controls grid columns.
+
+        columnDefs: [
+            { field: 'pId' },
+            { field: 'pName' },
+            { field: 'pQuantity' },
+            { field: 'pCategory' },
+            {
+                headerName: 'Actions',
+                cellRenderer: function (params) {
+                    const data = params.data;
+                    const dataArr = [data.pId, data.pName, data.pQuantity, data.pCategory];
+                    console.log(dataArr);
+                    return `<button class="btn btn-danger" onclick = "Destroy(${data.pId})">Delete</button>
+                                        <button class="btn btn-primary" id="editBtn" onclick="Edit(${data.pId}, '${data.pName}', '${data.pQuantity}', '${data.pCategory}')">Edit</button>`
+
+                },
+            },
+        ],
+
+        defaultColDef: {
+            flex: 1,
+            filter: true,
+            editable: false,
+        },
+
+        // onCellValueChanged: function (params) {
+        //     fetch(`/Data/UpdateData/`, {
+        //         method: "POST",
+        //         headers: { 'Content-Type': 'application/json' },
+        //         body: JSON.stringify(params.data),
+        //     })
+        // }
+    };
+
+
+       gridApi = agGrid.createGrid(document.querySelector('#myGrid'), gridOptions);
+
+    // Fetch Remote Data
+    fetch("/Data/ShowData/")
+        .then((response) => response.json())
+        .then((data) => gridApi.setGridOption('rowData', data));
+
+    function Destroy(id) {
+        fetch(`/Data/deleteData/${id}`, { method: "POST" }) // Corrected the string interpolation
+            .then((response) => response.json())
+            .then((data) => gridApi.setGridOption('rowData', data));
+    }
+    function Edit(pId, pName, pQuantity, pCategory) {
+        // Set modal fields with the passed values
+        $("#Id").val(pId);
+        $("#Name").val(pName);
+        $("#quantity").val(pQuantity);
+        $("#category").val(pCategory);
+        $("#staticBackdrop").modal("show");
+    }
+    function Create(id) {
+        fetch(`/Data/AddData/${id}`, { method: "POST" })
+            .then((response) => response.json())
+            .then((data) => gridApi.setGridOption('rowData', data));
+    }
+
+    $("#saveBtn").click(function () {
+        var formData = $("#StudentForm").serialize();
+        var edit = $("#StudentForm #Id").val() == 0;
+        var url = "/Data/AddData/" ;
+
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: formData,
+            success: function (data) {
+                console.log(data);
+                $("#staticBackdrop").modal("hide");
+            },
+            error: function (xhr) {
+                if (xhr.status === 400) {
+                    var errors = xhr.responseJSON;
+                    $.each(errors, function (key, value) {
+                        $("#" + key + "check").text(value).show();
+                    });
+                } else {
+                    console.log("Server error:", xhr.responseText);
+                }
+            }
+        });
+        $("#addBtn").click(function () {
+            $("#StudentForm")[0].reset();
+        })
+    });
+
+
+
+
+</script>
+
+
